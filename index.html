@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Games Deluxe Music Player</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #121212;
+        color: #fff;
+        padding-bottom: 0;
+    }
+
+    .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 25px;
+        background: #000;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .logo {
+        font-weight: bold;
+        font-size: 22px;
+        color: #1DB954;
+    }
+
+    .search-container {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        padding: 0 20px;
+    }
+
+    .search-box {
+        width: 100%;
+        max-width: 500px;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 10px 16px;
+        border-radius: 999px;
+        border: none;
+        outline: none;
+        font-size: 15px;
+        background: #242424;
+        color: #fff;
+    }
+
+    .main-layout {
+        display: grid;
+        grid-template-columns: 2.5fr 1.2fr;
+        gap: 25px;
+        padding: 20px 25px 120px;
+    }
+
+    @media (max-width: 900px) {
+        .main-layout {
+            grid-template-columns: 1fr;
+            padding-bottom: 140px;
+        }
+    }
+
+    .left-column {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }
+
+    .section-title {
+        font-size: 20px;
+        margin-bottom: 10px;
+    }
+
+    .top-result-card {
+        background: #181818;
+        border-radius: 10px;
+        padding: 16px;
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        cursor: pointer;
+        transition: background 0.15s ease;
+    }
+
+    .top-result-card:hover { background: #282828; }
+
+    .top-thumb {
+        width: 90px;
+        height: 90px;
+        border-radius: 8px;
+        background-size: cover;
+        background-position: center;
+        background-color: #333;
+    }
+
+    .top-info { display: flex; flex-direction: column; gap: 4px; }
+
+    .top-title { font-size: 18px; font-weight: bold; }
+
+    .top-meta { font-size: 13px; color: #b3b3b3; }
+
+    .song-list { margin-top: 8px; }
+
+    .song-item {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        background: #181818;
+        margin-bottom: 6px;
+        transition: background 0.15s ease;
+    }
+
+    .song-item:hover { background: #282828; }
+
+    .song-thumb {
+        width: 48px;
+        height: 48px;
+        border-radius: 4px;
+        background-size: cover;
+        background-position: center;
+        background-color: #333;
+    }
+
+    .song-text { display: flex; flex-direction: column; gap: 2px; }
+
+    .song-title { font-size: 14px; }
+
+    .song-artist { font-size: 12px; color: #b3b3b3; }
+
+    .song-duration { font-size: 12px; color: #b3b3b3; }
+
+    .right-column {
+        background: #181818;
+        border-radius: 10px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        height: fit-content;
+    }
+
+    .small-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #b3b3b3;
+        margin-bottom: 4px;
+    }
+
+    .playlist-card {
+        background: #242424;
+        border-radius: 8px;
+        padding: 12px;
+        cursor: pointer;
+        transition: background 0.15s ease, transform 0.12s ease;
+    }
+
+    .playlist-card:hover {
+        background: #2f2f2f;
+        transform: translateY(-1px);
+    }
+
+    .playlist-name { font-size: 15px; font-weight: bold; }
+
+    .playlist-meta { font-size: 12px; color: #b3b3b3; margin-top: 4px; }
+
+    .bottom-bar {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        background: #181818;
+        border-top: 1px solid #333;
+        display: grid;
+        grid-template-columns: 1.5fr 2.3fr 1.2fr;
+        align-items: center;
+        padding: 10px 20px;
+        color: white;
+        z-index: 20;
+
+        transform: translateY(100%);
+        opacity: 0;
+        pointer-events: none;
+        transition: transform 0.18s ease-out, opacity 0.18s ease-out;
+    }
+
+    .bottom-bar.visible {
+        transform: translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .bar-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+    }
+
+    .bar-art {
+        width: 56px;
+        height: 56px;
+        background: #333;
+        border-radius: 6px;
+        background-size: cover;
+        background-position: center;
+        flex-shrink: 0;
+    }
+
+    .bar-info { display: flex; flex-direction: column; min-width: 0; }
+
+    .bar-title {
+        font-size: 14px;
+        font-weight: bold;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .bar-artist {
+        font-size: 12px;
+        color: #b3b3b3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .bar-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .bar-controls {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .bar-btn { cursor: pointer; opacity: 0.8; }
+    .bar-btn:hover { opacity: 1; }
+
+    .icon-sm { width: 16px; height: 16px; fill: #fff; }
+    .icon-md { width: 20px; height: 20px; fill: #fff; }
+
+    .icon-lg-circle {
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .icon-lg-circle svg {
+        width: 18px;
+        height: 18px;
+        fill: #000;
+    }
+
+    .progress-wrap {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 10px;
+        width: 100%;
+        align-items: center;
+    }
+
+    .time { font-size: 11px; color: #b3b3b3; }
+
+    #progressBar {
+        width: 100%;
+        cursor: pointer;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 4px;
+        border-radius: 999px;
+        background: #404040;
+        outline: none;
+    }
+
+    #progressBar::-webkit-slider-runnable-track {
+        height: 4px;
+        border-radius: 999px;
+        background: linear-gradient(to right, #1DB954 0%, #1DB954 var(--progress, 0%), #404040 var(--progress, 0%), #404040 100%);
+    }
+
+    #progressBar::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #1DB954;
+        box-shadow: 0 0 6px rgba(29,185,84,0.9);
+        margin-top: -4px;
+        transition: transform 0.08s ease-out, box-shadow 0.08s ease-out;
+    }
+
+    #progressBar:hover::-webkit-slider-thumb {
+        transform: scale(1.1);
+        box-shadow: 0 0 10px rgba(29,185,84,1);
+    }
+
+    .bar-right {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    #volumeSlider {
+        width: 110px;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 4px;
+        border-radius: 999px;
+        background: #404040;
+        cursor: pointer;
+    }
+
+    #volumeSlider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #fff;
+        margin-top: -3px;
+    }
+
+    #ytplayer { display: none; }
+</style>
+</head>
+<body>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<div class="header">
+    <div class="logo">Games Deluxe Music Player</div>
+    <div class="search-container">
+        <div class="search-box">
+            <input id="searchInput" type="text" placeholder="What do you want to listen to?" onkeydown="if(event.key==='Enter') searchSong()">
+        </div>
+    </div>
+</div>
+
+<div class="main-layout">
+    <div class="left-column">
+        <div>
+            <div class="section-title">Top result</div>
+            <div class="top-result-card" id="topResultCard">
+                <div class="top-thumb" id="topThumb"></div>
+                <div class="top-info">
+                    <div class="top-title" id="topTitle">Search for a song above</div>
+                    <div class="top-meta" id="topMeta">Song</div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="section-title">Songs</div>
+            <div class="song-list" id="songList"></div>
+        </div>
+    </div>
+
+    <div class="right-column">
+        <div class="section-title">Playlists</div>
+
+        <div class="playlist-card" onclick="playPlaylist('christmasHits')">
+            <div class="small-label">Playlist</div>
+            <div class="playlist-name">Christmas Hits</div>
+            <div class="playlist-meta">Cozy holiday vibes</div>
+        </div>
+
+        <div class="playlist-card" onclick="playPlaylist('gaming')">
+            <div class="small-label">Playlist</div>
+            <div class="playlist-name">Gaming Energy</div>
+            <div class="playlist-meta">High‑energy tracks to grind to</div>
+        </div>
+
+        <div class="playlist-card" onclick="playPlaylist('chill')">
+            <div class="small-label">Playlist</div>
+            <div class="playlist-name">Chill Night</div>
+            <div class="playlist-meta">Relaxed background music</div>
+        </div>
+    </div>
+</div>
+
+<div class="bottom-bar" id="bottomBar">
+    <div class="bar-left">
+        <div class="bar-art" id="barArt"></div>
+        <div class="bar-info">
+            <div class="bar-title" id="barTitle">Nothing playing</div>
+            <div class="bar-artist" id="barArtist">–</div>
+        </div>
+    </div>
+
+    <div class="bar-center">
+        <div class="bar-controls">
+            <div class="bar-btn">
+                <svg class="icon-sm" viewBox="0 0 24 24"><path d="M17 17H7v-3l-4 4 4 4v-3h12a3 3 0 0 0 3-3v-4h-2v4a1 1 0 0 1-1 1zm-10-6h10v3l4-4-4-4v3H7a3 3 0 0 0-3 3v4h2v-4a1 1 0 0 1 1-1z"/></svg>
+            </div>
+
+            <div class="bar-btn" onclick="skipSeconds(-5)">
+                <svg class="icon-md" viewBox="0 0 24 24"><path d="M6 19V5h2v14H6zm3.5-7l9.5 7V5l-9.5 7z"/></svg>
+            </div>
+
+            <div class="bar-btn" onclick="togglePlay()">
+                <div class="icon-lg-circle" id="playPauseIcon">
+                    <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+            </div>
+
+            <div class="bar-btn" onclick="skipSeconds(5)">
+                <svg class="icon-md" viewBox="0 0 24 24"><path d="M16 5v14h-2V5h2zM14.5 12L5 5v14l9.5-7z"/></svg>
+            </div>
+
+            <div class="bar-btn">
+                <svg class="icon-sm" viewBox="0 0 24 24"><path d="M17 3h4v4h-2V5h-2a3 3 0 0 0-2.4 1.2L9.6 13H7a3 3 0 0 0-3 3H2a5 5 0 0 1 5-5h1.6l4.3-5.8A5 5 0 0 1 17 3zm-3.6 9.8 1.4-1.9A3 3 0 0 1 17 9h2V7h2v4h-4a3 3 0 0 0-2.4 1.2l-1.2 1.6zM7 17h2l-2 2H3v-4h2v2h2z"/></svg>
+            </div>
+        </div>
+
+        <div class="progress-wrap">
+            <div class="time" id="currentTime">0:00</div>
+            <input type="range" id="progressBar" min="0" max="100" value="0" oninput="scrub()">
+            <div class="time" id="duration">0:00</div>
+        </div>
+    </div>
+
+    <div class="bar-right">
+        <div class="bar-btn">
+            <svg class="icon-sm" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a3.5 3.5 0 0 0-2-3.16v6.32A3.5 3.5 0 0 0 16.5 12zm0-7.5a7.5 7.5 0 0 1 0 15v-2a5.5 5.5 0 0 0 0-11v-2z"/></svg>
+        </div>
+        <input type="range" id="volumeSlider" min="0" max="100" value="80" oninput="setVolume(this.value)">
+    </div>
+</div>
+
+<!-- SCRIPT BEGINS IN PART 2 --><!-- SCRIPT BEGINS IN PART 2 -->
+
+<script>
+const YT_API_KEY = "AIzaSyArii-WGvdIwokBowr1OCuEdF83mWqCh24";  // replace locally with your key
+
+let player;
+let currentPlaylist = null;
+let currentPlaylistIndex = 0;
+let bottomBarVisible = false;
+
+// PLAYLISTS
+const playlists = {
+    christmasHits: [
+        "Christmas Hits playlist",
+        "Last Christmas Wham",
+        "All I Want For Christmas Is You Mariah Carey",
+        "Snowman Sia",
+        "Jingle Bell Rock"
+    ],
+    gaming: [
+        "NCS gaming music",
+        "electronic gaming mix",
+        "cyberpunk music mix",
+        "dubstep gaming mix"
+    ],
+    chill: [
+        "lofi hip hop radio",
+        "chillhop beats",
+        "late night lofi",
+        "relaxing jazz music"
+    ]
+};
+
+// YOUTUBE PLAYER INIT
+function onYouTubeIframeAPIReady() {
+    player = new YT.Player("ytplayer", {
+        height: "0",
+        width: "0",
+        videoId: "",
+        playerVars: { autoplay: 0, controls: 0 },
+        events: { onStateChange: onPlayerStateChange }
+    });
+}
+
+// PLAYER STATE HANDLER
+function onPlayerStateChange(event) {
+    const state = event.data;
+
+    if (state === YT.PlayerState.PLAYING) {
+        showBottomBar();
+        setPlayIcon(false);
+    }
+
+    if (state === YT.PlayerState.PAUSED) {
+        setPlayIcon(true);
+    }
+
+    if (state === YT.PlayerState.ENDED) {
+        setPlayIcon(true);
+
+        if (currentPlaylist) {
+            currentPlaylistIndex++;
+            const list = playlists[currentPlaylist];
+            if (currentPlaylistIndex < list.length) {
+                searchYouTube(list[currentPlaylistIndex], true);
+            }
+        }
+    }
+}
+
+// SHOW BOTTOM BAR
+function showBottomBar() {
+    if (!bottomBarVisible) {
+        bottomBarVisible = true;
+        document.getElementById("bottomBar").classList.add("visible");
+    }
+}
+
+// SEARCH BAR FUNCTION
+function searchSong() {
+    const query = document.getElementById("searchInput").value.trim();
+    if (!query) return;
+    currentPlaylist = null;
+    searchYouTube(query, true);
+}// YOUTUBE SEARCH
+function searchYouTube(query, autoplay) {
+    const url =
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=8&q=${encodeURIComponent(query)}&key=${YT_API_KEY}`;
+
+    fetch(url)
+        .then(res => res.json())
+        .then(data => {
+            if (!data.items || data.items.length === 0) return;
+
+            const items = data.items;
+
+            // TOP RESULT
+            const top = items[0];
+            const topTitle = top.snippet.title;
+            const topThumb = top.snippet.thumbnails.high.url;
+            const topChannel = top.snippet.channelTitle;
+            const topVideoId = top.id.videoId;
+
+            document.getElementById("topTitle").textContent = topTitle;
+            document.getElementById("topMeta").textContent = `Song • ${topChannel}`;
+            document.getElementById("topThumb").style.backgroundImage = `url(${topThumb})`;
+
+            document.getElementById("topResultCard").onclick = () => {
+                playVideo(topVideoId, topTitle, topChannel, topThumb);
+            };
+
+            // SONG LIST
+            const songList = document.getElementById("songList");
+            songList.innerHTML = "";
+
+            items.forEach((video, index) => {
+                const vTitle = video.snippet.title;
+                const vThumb = video.snippet.thumbnails.medium.url;
+                const vChannel = video.snippet.channelTitle;
+                const vId = video.id.videoId;
+
+                const item = document.createElement("div");
+                item.className = "song-item";
+                item.onclick = () => playVideo(vId, vTitle, vChannel, vThumb);
+
+                item.innerHTML = `
+                    <div class="song-thumb" style="background-image:url('${vThumb}')"></div>
+                    <div class="song-text">
+                        <div class="song-title">${vTitle}</div>
+                        <div class="song-artist">${vChannel}</div>
+                    </div>
+                    <div class="song-duration">${index === 0 ? "Top" : ""}</div>
+                `;
+
+                songList.appendChild(item);
+            });
+
+            if (autoplay) {
+                playVideo(topVideoId, topTitle, topChannel, topThumb);
+            }
+        });
+}
+
+// PLAY VIDEO
+function playVideo(videoId, title, artist, thumb) {
+    if (!player || !player.loadVideoById) {
+        console.warn("Player not ready yet");
+        return;
+    }
+
+    player.loadVideoById(videoId);
+
+    document.getElementById("barTitle").textContent = title;
+    document.getElementById("barArtist").textContent = artist;
+    document.getElementById("barArt").style.backgroundImage = `url(${thumb})`;
+
+    showBottomBar();
+}
+
+// PLAYLIST HANDLER
+function playPlaylist(name) {
+    const list = playlists[name];
+    if (!list || list.length === 0) return;
+
+    currentPlaylist = name;
+    currentPlaylistIndex = 0;
+
+    searchYouTube(list[0], true);
+}// PLAY/PAUSE
+function togglePlay() {
+    if (!player) return;
+
+    const state = player.getPlayerState();
+    if (state === YT.PlayerState.PLAYING) {
+        player.pauseVideo();
+    } else {
+        player.playVideo();
+    }
+}
+
+// UPDATE PLAY/PAUSE ICON
+function setPlayIcon(showPlay) {
+    const iconContainer = document.getElementById("playPauseIcon");
+    iconContainer.innerHTML = "";
+
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+
+    if (showPlay) {
+        path.setAttribute("d", "M8 5v14l11-7z");
+    } else {
+        path.setAttribute("d", "M6 5h4v14H6zm8 0h4v14h-4z");
+    }
+
+    svg.appendChild(path);
+    iconContainer.appendChild(svg);
+}
+
+// VOLUME
+function setVolume(v) {
+    if (player) player.setVolume(v);
+}
+
+// SKIP SECONDS
+function skipSeconds(delta) {
+    if (!player) return;
+    const t = player.getCurrentTime() + delta;
+    player.seekTo(Math.max(0, t), true);
+}
+
+// SCRUB PROGRESS BAR
+function scrub() {
+    if (!player) return;
+    const slider = document.getElementById("progressBar");
+    const percent = slider.value;
+    const duration = player.getDuration();
+    if (!duration) return;
+    player.seekTo((percent / 100) * duration, true);
+}
+
+// TIME FORMATTER
+function formatTime(sec) {
+    if (!isFinite(sec)) return "0:00";
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+}
+
+// UPDATE PROGRESS BAR
+setInterval(() => {
+    if (!player || !player.getDuration) return;
+
+    const duration = player.getDuration();
+    if (!duration) return;
+
+    const current = player.getCurrentTime();
+    const percent = (current / duration) * 100;
+
+    const progressBar = document.getElementById("progressBar");
+    progressBar.value = percent;
+    progressBar.style.setProperty("--progress", percent + "%");
+
+    document.getElementById("currentTime").textContent = formatTime(current);
+    document.getElementById("duration").textContent = formatTime(duration);
+}, 500);</script>
+
+<!-- REQUIRED: YouTube player container -->
+<div id="ytplayer"></div>
+
+</body>
+
+</html>
